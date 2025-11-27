@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APPAPI Ticket Exporter 🇩🇪 🇨🇭</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9;
+            --text-color: #333;
+            --input-bg: #ffffff;
+            --input-border: #ccc;
+            --result-bg: #e9f7ff;
+            --result-border: #007bff;
+            --accent-color: #007bff;
+            --accent-text: white;
+            --button-hover: #0056b3;
+            --list-item-bg: #f0f0f0;
+            --list-item-border: #007bff;
+            --footer-color: #888;
+            --duplicate-color-fail: #dc3545;
+            --duplicate-color-ok: #28a745;
+            --category-color: #007bff;
+            --error-color: #dc3545;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #282c34;
+            --text-color: #e0e0e0;
+            --input-bg: #363a44;
+            --input-border: #4a4f59;
+            --result-bg: #363a44;
+            --result-border: #61dafb;
+            --accent-color: #61dafb;
+            --accent-text: #282c34;
+            --button-hover: #21a1f1;
+            --list-item-bg: #4a4f59;
+            --list-item-border: #61dafb;
+            --footer-color: #61dafb;
+            --duplicate-color-fail: #ff6b81;
+            --duplicate-color-ok: #32cd32;
+            --category-color: #61dafb;
+            --error-color: #ff6b81;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #logo-image {
+            height: 35px; 
+            width: auto;
+            border-radius: 5px;
+            object-fit: contain;
+            transition: opacity 0.3s;
+        }
+        h2 {
+            color: var(--accent-color);
+            margin: 0;
+        }
+        #unosTeksta {
+            width: 98%;
+            min-height: 250px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            resize: vertical;
+            white-space: pre-wrap;
+            border-radius: 8px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .error-message {
+            color: var(--error-color);
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: var(--accent-color);
+            color: var(--accent-text);
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background-color: var(--button-hover);
+            color: var(--accent-text);
+            transform: translateY(-1px);
+        }
+        #rezultati {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid var(--result-border);
+            background-color: var(--result-bg);
+            color: var(--text-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .stats {
+            margin-bottom: 15px;
+        }
+        .stats p {
+            margin: 5px 0;
+        }
+        .duplicate-count {
+            font-weight: bold;
+        }
+        .duplicate-count.ok {
+            color: var(--duplicate-color-ok);
+        }
+        .duplicate-count.fail {
+            color: var(--duplicate-color-fail);
+        }
+        .category-info {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--category-color);
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--category-color);
+        }
+        .brojevi-lista {
+            list-style-type: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .brojevi-lista li {
+            background-color: var(--list-item-bg);
+            color: var(--text-color);
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 0.95em;
+            border: 1px solid var(--list-item-border);
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        #footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.9em;
+            color: var(--footer-color);
+            font-weight: bold;
+        }
+        .theme-switch-wrapper { display: flex; align-items: center; }
+        .theme-switch { display: inline-block; height: 34px; position: relative; width: 60px; }
+        .theme-switch input { display:none; }
+        .slider { background-color: #ccc; bottom: 0; cursor: pointer; left: 0; position: absolute; right: 0; top: 0; transition: .4s; }
+        .slider:before { background-color: #fff; bottom: 4px; content: ""; height: 26px; left: 4px; position: absolute; transition: .4s; width: 26px; }
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+        .slider.round { border-radius: 34px; }
+        .slider.round:before { border-radius: 50%; }
+        .theme-text { margin-right: 10px; font-size: 0.9em; }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <div class="header-container">
+        <div class="title-section">
+            <img id="logo-image" src="https://i.imgur.com/uGAXsHH.png" alt="Logo">
+            <h2>APPAPI Ticket Exporter 🇩🇪 🇨🇭</h2>
+        </div>
+        
+        <div class="theme-switch-wrapper">
+            <span class="theme-text">Light / Dark</span>
+            <label class="theme-switch">
+                <input type="checkbox" id="checkbox">
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </div>
+    
+    <p>Zalepite tekst sa "Select" tiketima u polje ispod:</p>
+    <span id="errorMessage" class="error-message" style="display: none;"></span>
+    <textarea id="unosTeksta" placeholder="Ubaci ovde svoj tekst..."></textarea>
+    
+    <button onclick="izdvojiBrojeve()">Izdvoji brojeve</button>
+
+    <div id="rezultati" style="display: none;">
+        
+        <div id="caseCategory" class="category-info" style="display: none;"></div>
+
+        <div class="stats">
+            <p><strong>Ukupno pronađenih tiketa:</strong> <span id="ukupnoPronađeno">0</span></p>
+            <p><strong>Jedinstvenih ID-jeva:</strong> <span id="ukupnoJedinstveno">0</span></p>
+            <p><strong>Duplikata preskočeno:</strong> <span id="brojDuplikata" class="duplicate-count">0</span></p>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; align-items: center;">
+            <div class="button-group">
+                <button id="copyMailButton" onclick="kopirajRezultate('mail')">Kopiranje za mail</button>
+                <button id="copyFullButton" onclick="kopirajRezultate('full')">Kopiraj brojeve (sa Ticket ID prefiksom)</button>
+                <button id="copyCleanButton" onclick="kopirajRezultate('clean')">Kopiraj samo brojeve</button>
+            </div>
+        </div>
+        
+        <ul id="listaBrojeva" class="brojevi-lista">
+            </ul>
+    </div>
+
+    <div id="footer">
+        <p>AS 2025</p>
+    </div>
+
+    <script>
+        let jedinstveniBrojevi = [];
+        let detektovanaKategorija = 'Nepoznato';
+
+        const logoImage = document.getElementById('logo-image');
+        const lightLogoUrl = "https://i.imgur.com/N1r4gx9.png";
+        const darkLogoUrl = "https://i.imgur.com/uGAXsHH.png";
+        const errorMessage = document.getElementById('errorMessage');
+        const rezultatiDiv = document.getElementById('rezultati');
+
+        function prikaziGresku(poruka) {
+            errorMessage.textContent = 'Error! ' + poruka;
+            errorMessage.style.display = 'block';
+            rezultatiDiv.style.display = 'none';
+        }
+
+        function sakrijGresku() {
+            errorMessage.style.display = 'none';
+        }
+
+        function detektujKategoriju(tekst) {
+            const kljucneReci = {
+                'Telesales': 'Telesales',
+                'Webshop': 'Webshop',
+                'Call centre': 'Call centre'
+            };
+            
+            const normalizovaniTekst = tekst.toLowerCase();
+            
+            for (const kljuc in kljucneReci) {
+                if (normalizovaniTekst.includes(kljuc.toLowerCase())) {
+                    return kljucneReci[kljuc];
+                }
+            }
+            return 'Nepoznato';
+        }
+
+        function izdvojiBrojeve() {
+            const ulazniTekst = document.getElementById('unosTeksta').value.trim();
+
+            if (ulazniTekst === '') {
+                prikaziGresku('Polje za unos teksta je prazno.');
+                return;
+            }
+            
+            sakrijGresku();
+
+            const obrazac = /Select\s*(\d{5})/g;
+            const poklapanja = [...ulazniTekst.matchAll(obrazac)];
+            
+            const sviBrojevi = poklapanja.map(match => match[1]);
+            jedinstveniBrojevi = Array.from(new Set(sviBrojevi));
+            const duplikati = sviBrojevi.length - jedinstveniBrojevi.length;
+
+            if (jedinstveniBrojevi.length === 0) {
+                prikaziGresku('Proveri unete podatke.');
+                return;
+            }
+
+            detektovanaKategorija = detektujKategoriju(ulazniTekst);
+
+            const catDiv = document.getElementById('caseCategory');
+            const ukupnoPronađeno = document.getElementById('ukupnoPronađeno');
+            const ukupnoJedinstveno = document.getElementById('ukupnoJedinstveno');
+            const brojDuplikata = document.getElementById('brojDuplikata');
+            const listaElement = document.getElementById('listaBrojeva');
+            
+            catDiv.textContent = `Case Category: ${detektovanaKategorija}`;
+            catDiv.style.display = 'block';
+            
+            ukupnoPronađeno.textContent = sviBrojevi.length;
+            ukupnoJedinstveno.textContent = jedinstveniBrojevi.length;
+            
+            brojDuplikata.textContent = duplikati;
+            brojDuplikata.className = (duplikati === 0) ? 'duplicate-count ok' : 'duplicate-count fail';
+            
+            listaElement.innerHTML = ''; 
+            rezultatiDiv.style.display = 'block';
+
+            jedinstveniBrojevi.forEach(broj => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `Ticket ID: ${broj}`; 
+                listaElement.appendChild(listItem);
+            });
+        }
+
+        function kopirajRezultate(tip) {
+            if (jedinstveniBrojevi.length === 0) {
+                alert('Nema rezultata za kopiranje. Prvo izdvojite brojeve.');
+                return;
+            }
+
+            let tekstZaKopiranje;
+            
+            if (tip === 'full') {
+                tekstZaKopiranje = jedinstveniBrojevi.map(broj => `Ticket ID: ${broj}`).join('\n');
+            } else if (tip === 'clean') {
+                tekstZaKopiranje = jedinstveniBrojevi.join(' ');
+            } else if (tip === 'mail') {
+                const listaTiketa = jedinstveniBrojevi.map(broj => `• Ticket ID: ${broj}`).join('\n');
+                tekstZaKopiranje = `Tiketi na ${detektovanaKategorija} grupi:\n\n${listaTiketa}`;
+            }
+
+            navigator.clipboard.writeText(tekstZaKopiranje).then(() => {
+                const button = (tip === 'full') ? document.getElementById('copyFullButton') : 
+                                (tip === 'clean') ? document.getElementById('copyCleanButton') : 
+                                document.getElementById('copyMailButton');
+                                
+                const originalText = button.textContent;
+                button.textContent = 'Kopirano!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 1500);
+            }).catch(err => {
+                console.error('Copy failed: ', err);
+                alert('Neuspešno kopiranje.');
+            });
+        }
+        
+        const toggleSwitch = document.getElementById('checkbox');
+        const body = document.body;
+
+        function applyTheme(theme) {
+            body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            logoImage.src = (theme === 'dark') ? darkLogoUrl : lightLogoUrl;
+            toggleSwitch.checked = (theme === 'dark');
+        }
+
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme) {
+            applyTheme(currentTheme);
+        } else {
+            applyTheme('dark'); 
+        }
+
+        function switchTheme(e) {
+            const newTheme = e.target.checked ? 'dark' : 'light';
+            applyTheme(newTheme);
+        }
+        
+        toggleSwitch.addEventListener('change', switchTheme, false);
+    </script>
+
+</body>
+</html>
